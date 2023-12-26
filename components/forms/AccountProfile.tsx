@@ -89,7 +89,7 @@ const onSubmit = async (values: z.infer<typeof UserValidation>) => {
 
     //  TODO: Update user profile
 
-    console.log(values)
+    console.log(values);
 }
 
     return (
