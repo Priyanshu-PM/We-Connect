@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,6 +20,8 @@ import { ChangeEvent, useState } from "react";
 import { Textarea } from "../ui/textarea";
 import { isBase64Image } from "@/lib/utils";
 import { useUploadThing } from '@/lib/uploadthing'
+import { updateUser } from "@/lib/actions/user.actions";
+import { usePathname, useRouter } from "next/navigation";
 
 interface Props {
     user: {
@@ -39,6 +40,9 @@ const AccountProfile = ({user, btnTitle} : Props) => {
 
     const [files, setFiles] = useState<File[]>([]);
     const { startUpload } = useUploadThing("media");
+    
+    const router = useRouter();
+    const pathname = usePathname();
 
     const form = useForm({
         resolver: zodResolver(UserValidation),
@@ -76,20 +80,39 @@ const AccountProfile = ({user, btnTitle} : Props) => {
 const onSubmit = async (values: z.infer<typeof UserValidation>) => {
     
     const blob = values.profile_photo;
-
+    // console.log("PATHNAME IS : ",pathname);
     const hasImageChanged = isBase64Image(blob);
     if(hasImageChanged)
     {
+        // console.log("---------------------------- IN THE IF ELSE LOOP ------------------------------");
         const imgRes = await startUpload(files);
+        // console.log("IMGRES IS : ", imgRes);
         if(imgRes && imgRes[0].url)
         {
+            // console.log("INSIDE THE IMGRES IF ELSE CONDITION\n", imgRes[0].url);
             values.profile_photo = imgRes[0].url;
         }
     }
 
     //  TODO: Update user profile
+    await updateUser(
+        {
+            userId: user.id,
+            username: values.username,
+            name: values.name,
+            bio: values.bio,
+            image: values.profile_photo,
+            path: pathname
+        }
+    );
 
-    console.log(values);
+    if(pathname === '/profile/edit') {
+        router.back();
+    } else {
+        router.push('/');
+    }
+
+    // console.log("\n---------------------------- Account profile values is : ----------------------\n",values);
 }
 
     return (
@@ -132,6 +155,7 @@ const onSubmit = async (values: z.infer<typeof UserValidation>) => {
                                 onChange={(e) => handleImage(e, field.onChange)}
                             />
                         </FormControl>
+                        <FormMessage/>
                     </FormItem>
                 )}
                 />
@@ -152,6 +176,7 @@ const onSubmit = async (values: z.infer<typeof UserValidation>) => {
                                 {...field}
                             />
                         </FormControl>
+                        <FormMessage/>
                     </FormItem>
                 )}
             />
@@ -171,6 +196,7 @@ const onSubmit = async (values: z.infer<typeof UserValidation>) => {
                                 {...field}
                             />
                         </FormControl>
+                        <FormMessage/>
                     </FormItem>
                 )}
             />
@@ -190,6 +216,7 @@ const onSubmit = async (values: z.infer<typeof UserValidation>) => {
                                 {...field}
                             />
                         </FormControl>
+                        <FormMessage/>
                     </FormItem>
                 )}
             />
